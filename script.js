@@ -47,7 +47,7 @@ function startBlowDetection(stream) {
     detectBlow();
 }
 
-// Function to handle the blow event
+// Function to run when the candle is blown out
 function blowOutCandle() {
     console.log("Happy birthday Winit!");
 
@@ -60,50 +60,61 @@ function blowOutCandle() {
 
     // Play the birthday song
     const audio = document.getElementById('birthday-song');
-    if (audio) {
-        audio.play();
-    } else {
-        console.log("Audio element not found.");
-    }
+    audio.play();
 
     // Start confetti effect
-    const duration = 5000; // Duration of confetti (in milliseconds)
-    const endTime = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 100, zIndex: 0 };
-
-    function randomInRange(min, max) {
-        return Math.random() * (max - min) + min;
-    }
-
-    function emitConfetti() {
-        const timeLeft = endTime - Date.now();
-
-        if (timeLeft <= 0) {
-            return;
-        }
-
-        const particleCount = 50; // Fixed particle count per interval
-
-        // Generate confetti
-        confetti(
-            Object.assign({}, defaults, {
-                particleCount,
-                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-            })
-        );
-        confetti(
-            Object.assign({}, defaults, {
-                particleCount,
-                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-            })
-        );
-
-        // Schedule next confetti emission
-        setTimeout(emitConfetti, 100); // Adjust timeout for frequency
-    }
-
-    emitConfetti(); // Start the emission
+    startConfetti();
 }
 
-// Call the function to request microphone permission
+// Function to create a confetti effect
+function startConfetti() {
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx = canvas.getContext('2d');
+    const confettiCount = 200; // Number of confetti particles
+
+    // Set canvas size
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Generate random confetti particles
+    const particles = [];
+    for (let i = 0; i < confettiCount; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            radius: Math.random() * 5 + 2,
+            color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+            velocityX: Math.random() * 6 - 3,
+            velocityY: Math.random() * 6 - 3
+        });
+    }
+
+    function animateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        particles.forEach(particle => {
+            ctx.beginPath();
+            ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+            ctx.fillStyle = particle.color;
+            ctx.fill();
+
+            // Update particle position
+            particle.x += particle.velocityX;
+            particle.y += particle.velocityY;
+            particle.velocityY += 0.05; // Gravity effect
+
+            // Reset particle if it goes off screen
+            if (particle.x > canvas.width || particle.x < 0 || particle.y > canvas.height) {
+                particle.x = Math.random() * canvas.width;
+                particle.y = 0;
+            }
+        });
+
+        requestAnimationFrame(animateConfetti);
+    }
+
+    animateConfetti();
+}
+
+// Request microphone permission and start detection
 requestMicPermission();
